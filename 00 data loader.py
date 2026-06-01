@@ -57,18 +57,37 @@ PERS_AGG_MAP = {
 
 # Known aggregation map for Inf_Policy
 POLICY_AGG_MAP = {
-    "PRODUCT_CATEGORIES"  : ("PRODUCT_CATEGORY",   "pipe"),
-    "PLAN_NAMES"          : ("PLAN_NAME",           "pipe"),
-    "PRODUCT_NAMES"       : ("PRODUCT_NAME",        "pipe"),
-    "POLICY_STATUSES"     : ("POLICY_STATUS",       "pipe"),
-    "ANNPREM_PHP_TOTAL"   : ("ANNPREM_PHP",         "sum"),
-    "MODE_PREM_TOTAL"     : ("MODE_PREM_PHP",       "sum"),
-    "COVANT_TOTAL"        : ("COVANT_PHP",          "sum"),
-    "RIDER_COVANT_TOTAL"  : ("OTH_RID_COVANT_PHP",  "sum"),
-    "FIRST_POLICY_DT"     : ("EFFECTIVE_DT",        "min"),
-    "INFORCE_POLICY_COUNT": ("POLNUM",              "count"),
-    "CAMPAIGN_CODES"      : ("CAMPAIGN_CODE",       "pipe"),
-    "PAYMENT_MODES"       : ("PAYMENT_MODE_DESC",   "pipe"),
+    # Identifiers / descriptors
+    "PRODUCT_CATEGORIES"  : ("PRODUCT_CATEGORY",   "pipe"),   # e.g. "Traditional | VUL | Health"
+    "PLAN_NAMES"          : ("PLAN_NAME",           "pipe"),   # all plan names
+    "PLAN_CODES"          : ("Plan_Code",           "pipe"),   # all plan codes
+    "PRODUCT_NAMES"       : ("PRODUCT_NAME",        "pipe"),   # all product names
+    "POLICY_STATUSES"     : ("POLICY_STATUS",       "pipe"),   # all statuses
+    "PAYMENT_MODES"       : ("PAYMENT_MODE_DESC",   "pipe"),   # payment mode descriptions
+    "CAMPAIGN_CODES"      : ("CAMPAIGN_CODE",       "pipe"),   # campaign codes
+
+    # Flags
+    "ACTIVE_PRODUCT_IND"  : ("Active_Product_IND",  "yn_any"),  # Y if any policy is on active product
+
+    # Premiums
+    "ANNPREM_PHP_TOTAL"   : ("ANNPREM_PHP",         "sum"),   # total annualized premium
+    "MODE_PREM_TOTAL"     : ("MODE_PREM_PHP",       "sum"),   # total modal premium
+
+    # Coverage amounts
+    "COVAMT_TOTAL"        : ("COVAMT_PHP",          "sum"),   # total base coverage
+    "CI_COVAMT_TOTAL"     : ("CI_COVAMT_PHP",       "sum"),   # total critical illness coverage
+    "HI_COVAMT_TOTAL"     : ("HI_COVAMT_PHP",       "sum"),   # total health/hospitalization coverage
+    "OTH_RID_TOTAL"       : ("OTH_RID_PHP",         "sum"),   # total other rider premiums
+    "RIDER_COVANT_TOTAL"  : ("OTH_RID_COVANT_PHP",  "sum"),   # total rider coverage amount
+
+    # Dates
+    "FIRST_POLICY_DT"     : ("EFFECTIVE_DT",        "min"),   # earliest policy effective date
+    "EARLIEST_PAYUP_DT"   : ("Pay_Up_Date",         "min"),   # earliest pay-up date
+    "LATEST_PAYUP_DT"     : ("Pay_Up_Date",         "max"),   # latest pay-up date
+    "GENERATED_DATE"      : ("Generated_Date",      "first"), # extract timestamp
+
+    # Count
+    "INFORCE_POLICY_COUNT": ("POLNUM",              "count"), # number of in-force policies
 }
 
 
@@ -106,13 +125,22 @@ def _check_unhandled_cols(df, agg_map, drop_cols, table_name):
         print(f"    ✓  All {table_name} columns accounted for — nothing will be dropped.")
 
 
+def _yn_any(x):
+    """Returns Y if any value in the series is Y, else N. For Y/N flag columns."""
+    return "Y" if "Y" in x.astype(str).str.upper().values else "N"
+
+
 def _build_agg_dict(df, agg_map):
     """Build a valid agg dict using only columns that exist in df."""
     agg_dict = {}
-    pipe_join = _pipe_join
     for out_col, (src_col, func) in agg_map.items():
         if src_col in df.columns:
-            agg_dict[out_col] = (src_col, pipe_join if func == "pipe" else func)
+            if func == "pipe":
+                agg_dict[out_col] = (src_col, _pipe_join)
+            elif func == "yn_any":
+                agg_dict[out_col] = (src_col, _yn_any)
+            else:
+                agg_dict[out_col] = (src_col, func)
     return agg_dict
 
 
