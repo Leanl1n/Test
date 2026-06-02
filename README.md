@@ -1,126 +1,88 @@
-# Insurance Analytics — Python Scripts
+# Excel to TSV Converter
 
-## Quick Start Guide
+Converts an Excel file with merged header rows into a clean, flat TSV file.
 
------
-
-## Folder Structure
+## Project Structure
 
 ```
-insurance_analysis/
-│
-├── 00_data_loader.py               ← Shared utility (run first / imported by others)
-├── 01_retention_lapse_analysis.py  ← Goal 1: Reduce churn & improve retention
-├── 02_crosssell_upsell_targeting.py← Goal 2: Grow revenue (cross-sell & upsell)
-├── 03_risk_portfolio_health.py     ← Goal 3: Monitor risk & portfolio health
-├── 04_agent_branch_performance.py  ← Goal 4: Improve agent & branch performance
-└── README.md                       ← This file
+excel_to_tsv/
+├── src/
+│   └── excel_to_tsv/
+│       ├── __init__.py
+│       └── converter.py    # Core conversion logic
+├── tests/
+│   └── test_converter.py   # Unit tests
+├── data/
+│   └── test.xlsx           # Put your Excel file here
+├── output/                 # TSV output saved here
+├── cli.py                  # Command-line interface
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
 
------
+## What it does
 
-## Step 1: Install Required Libraries
+- Reads `.xlsx` files that have merged/multi-row section headers
+- Uses row 3 (index 2) as the real column headers by default
+- Drops columns with no header (NaN or empty string)
+- Drops columns where every single row is empty
+- Uppercases all column headers for consistency
+- Exports a clean `.tsv` file to the `output/` folder
+
+## Installation
 
 ```bash
-pip install pandas numpy matplotlib scikit-learn
+pip install -r requirements.txt
 ```
 
------
+## Usage
 
-## Step 2: Set Your CSV File Paths
-
-Open `00_data_loader.py` and update these three lines to match your actual file paths:
-
-```python
-PERSISTENCY_CSV = "customer_persistency.csv"   # ← your Customer Persistency CSV
-CUSTOMER_CSV    = "inf_customer.csv"            # ← your INF_Customer CSV
-POLICY_CSV      = "inf_policy.csv"              # ← your Inf_Policy CSV
-```
-
-**Examples:**
-
-```python
-PERSISTENCY_CSV = "C:/Users/you/data/customer_persistency.csv"
-CUSTOMER_CSV    = "C:/Users/you/data/inf_customer.csv"
-POLICY_CSV      = "C:/Users/you/data/inf_policy.csv"
-```
-
------
-
-## Step 3: Run the Scripts
-
-Run each script from the same folder using Python:
+Place your Excel file in the `data/` folder and run:
 
 ```bash
-# Test data loading first
-python 00_data_loader.py
-
-# Run individual analyses
-python 01_retention_lapse_analysis.py
-python 02_crosssell_upsell_targeting.py
-python 03_risk_portfolio_health.py
-python 04_agent_branch_performance.py
+python cli.py --input data/test.xlsx
 ```
 
------
+Output is saved to `output/output.tsv` by default.
 
-## Output Files
+### Custom output path
+```bash
+python cli.py --input data/test.xlsx --output output/result.tsv
+```
 
-Each script saves its results to a subfolder:
+### Custom header/data rows
+```bash
+python cli.py --input data/test.xlsx --header-row 2 --data-start-row 3
+```
 
-|Script|Output Folder              |What’s Inside                              |
-|------|---------------------------|-------------------------------------------|
-|01    |`output/retention/`        |Persistency charts, churn scores CSV       |
-|02    |`output/crosssell/`        |Candidate list CSV, product charts         |
-|03    |`output/risk/`             |Portfolio summary CSV, vintage charts      |
-|04    |`output/agent_performance/`|Branch & agent ranking CSVs, quadrant chart|
+### All options
 
------
+| Argument           | Default               | Description                                     |
+|--------------------|-----------------------|-------------------------------------------------|
+| `--input`          | *(required)*          | Path to the input `.xlsx` file                  |
+| `--output`         | `output/output.tsv`   | Path for the output `.tsv` file                 |
+| `--header-row`     | `2`                   | Zero-based row index of real column headers     |
+| `--data-start-row` | `3`                   | Zero-based row index where data begins          |
 
-## What Each Script Does
+## Running Tests
 
-### 01 — Retention & Lapse Analysis
+```bash
+pytest tests/
+```
 
-- Overall 13-month and 25-month persistency rates
-- Lapse rates by age, gender, civil status, education
-- Payment mode impact on retention
-- Digital engagement vs retention
-- Complaint & claims correlation
-- Premium retention ratio (INPREM / Written_PREM)
-- **Churn risk score per customer (Logistic Regression)**
+## Excel File Structure Expected
 
-### 02 — Cross-Sell & Upsell Targeting
+```
+Row 0:  [ AGENT INFO (merged A:J) ]  [ other section ]
+Row 1:  [ NaN                     ]  [ NaN            ]
+Row 2:  TERRITORY | REGION | ...      COL_K | COL_L ...   ← real headers
+Row 3:  data      | data   | ...      ...                  ← data starts here
+```
 
-- Active single-policy holder candidate pool
-- Near Premier Club qualifier list
-- Purchase interval distribution (timing next offer)
-- Product category penetration
-- Contactability matrix (email, mobile, address, consent)
-- **Scored cross-sell candidate export (CSV)**
+## Opening TSV in Excel
 
-### 03 — Risk & Portfolio Health
-
-- Policy status breakdown (pie chart)
-- Premium at risk by product category
-- Medical & occupational risk rating distribution
-- RPU, surrender, loan, and free-look rates
-- **Cohort vintage analysis** (persistency by issue year)
-- Portfolio value summary (premium, coverage, ANP)
-
-### 04 — Agent & Branch Performance
-
-- Branch persistency rate vs volume
-- **Quality vs Volume quadrant scatter** (Stars / At-Risk / Needs Attention)
-- Agent composite score ranking (60% quality + 40% volume)
-- New vs existing customer mix by branch
-- Channel performance (Worksite, OFW, Personal, Preferred)
-- Campaign attribution by persistency rate
-
------
-
-## Notes
-
-- Scripts automatically skip any column that doesn’t exist in your data — no errors
-- All charts are saved as PNG (150 DPI) — ready for presentations
-- CSVs are saved alongside charts in each output folder
-- The churn model in Script 01 uses logistic regression; upgrade to XGBoost for higher accuracy
+1. Open Excel
+2. **File > Open** → change file filter to **All Files (`*.*`)**
+3. Select your `.tsv` file
+4. Text Import Wizard: choose **Delimited** → check **Tab** → Finish
