@@ -1,88 +1,68 @@
-# Excel to TSV Converter
+# 📊 EDA — Customer Persistency & Campaign Analysis
 
-Converts an Excel file with merged header rows into a clean, flat TSV file.
+**Role:** Campaign Analyst  
+**Domain:** Insurance — In-Force Portfolio  
+**Tables:** Customer Persistency · INF_Customer · Inf_Policy
 
-## Project Structure
+-----
+
+## What Is This?
+
+This project is an Exploratory Data Analysis (EDA) notebook built for campaign analysts working on an insurance in-force book. It helps you understand **who your customers are, whether they stay, and which campaigns, agents, and products drive the most value.**
+
+-----
+
+## Files
+
+|File                        |Description                                                 |
+|----------------------------|------------------------------------------------------------|
+|`EDA_Campaign_Analyst.ipynb`|Main analysis notebook — run this                           |
+|`README.md`                 |This file — start here                                      |
+|`INFO.md`                   |Detailed flow, business questions answered, and column guide|
+
+-----
+
+## How to Run
+
+1. Open `EDA_Campaign_Analyst.ipynb` in Jupyter or VS Code
+1. Go to **Section 1 — Load Data** and replace the sample data block with your actual file paths:
+   
+   ```python
+   persistency = pd.read_csv('your_persistency_file.csv')
+   customers   = pd.read_csv('your_inf_customer_file.csv')
+   policies    = pd.read_csv('your_inf_policy_file.csv')
+   ```
+1. Run all cells top to bottom (`Kernel > Restart & Run All`)
+
+-----
+
+## Requirements
 
 ```
-excel_to_tsv/
-├── src/
-│   └── excel_to_tsv/
-│       ├── __init__.py
-│       └── converter.py    # Core conversion logic
-├── tests/
-│   └── test_converter.py   # Unit tests
-├── data/
-│   └── test.xlsx           # Put your Excel file here
-├── output/                 # TSV output saved here
-├── cli.py                  # Command-line interface
-├── requirements.txt
-├── .gitignore
-└── README.md
+pandas
+numpy
+matplotlib
+seaborn
 ```
 
-## What it does
-
-- Reads `.xlsx` files that have merged/multi-row section headers
-- Uses row 3 (index 2) as the real column headers by default
-- Drops columns with no header (NaN or empty string)
-- Drops columns where every single row is empty
-- Uppercases all column headers for consistency
-- Exports a clean `.tsv` file to the `output/` folder
-
-## Installation
+Install with:
 
 ```bash
-pip install -r requirements.txt
+pip install pandas numpy matplotlib seaborn
 ```
 
-## Usage
+-----
 
-Place your Excel file in the `data/` folder and run:
+## Key Outputs
 
-```bash
-python cli.py --input data/test.xlsx
-```
+- Persistency rates at 13 and 25 months
+- Premium retention ratios
+- Campaign quality rankings (count + ANP + persistency)
+- Agent volume vs quality scatter
+- Customer value matrix (ANP × policy frequency)
+- Branch leaderboard
+- Monthly issuance trend
 
-Output is saved to `output/output.tsv` by default.
+-----
 
-### Custom output path
-```bash
-python cli.py --input data/test.xlsx --output output/result.tsv
-```
-
-### Custom header/data rows
-```bash
-python cli.py --input data/test.xlsx --header-row 2 --data-start-row 3
-```
-
-### All options
-
-| Argument           | Default               | Description                                     |
-|--------------------|-----------------------|-------------------------------------------------|
-| `--input`          | *(required)*          | Path to the input `.xlsx` file                  |
-| `--output`         | `output/output.tsv`   | Path for the output `.tsv` file                 |
-| `--header-row`     | `2`                   | Zero-based row index of real column headers     |
-| `--data-start-row` | `3`                   | Zero-based row index where data begins          |
-
-## Running Tests
-
-```bash
-pytest tests/
-```
-
-## Excel File Structure Expected
-
-```
-Row 0:  [ AGENT INFO (merged A:J) ]  [ other section ]
-Row 1:  [ NaN                     ]  [ NaN            ]
-Row 2:  TERRITORY | REGION | ...      COL_K | COL_L ...   ← real headers
-Row 3:  data      | data   | ...      ...                  ← data starts here
-```
-
-## Opening TSV in Excel
-
-1. Open Excel
-2. **File > Open** → change file filter to **All Files (`*.*`)**
-3. Select your `.tsv` file
-4. Text Import Wizard: choose **Delimited** → check **Tab** → Finish
+> For the full business question breakdown, see **INFO.md**.
